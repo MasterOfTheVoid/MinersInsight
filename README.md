@@ -1,30 +1,50 @@
-# MinersInsight
+package com.example.xraymod;
 
-## Description
-MinersInsight is a Minecraft mod that allows players to see through blocks to detect ores and caves. This mod is designed to enhance the gaming experience by making it easier to find valuable resources.
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.BlockRenderLayer;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.commons.lang3.ArrayUtils;
+import org.lwjgl.input.Keyboard;
 
-## Features
-- Toggle Xray with a key (default: X).
-- Display ore blocks and caves.
-- Performance optimization for a smooth gaming experience.
+@Mod(modid = XrayMod.MODID, name = XrayMod.NAME, version = XrayMod.VERSION)
+public class XrayMod {
+    public static final String MODID = "xraymod";
+    public static final String NAME = "Xray Mod";
+    public static final String VERSION = "1.1";
 
-## Installation
-1. Download and install Minecraft Forge for version 1.16.5.
-2. Download the `miners_insight_xray_mod_v1.1.jar` file.
-3. Place the file in the `mods` folder of your Minecraft directory.
-4. Launch Minecraft and enjoy the mod!
+    private KeyBinding toggleXray;
+    private boolean xrayEnabled = false;
 
-## Changelog
-### Version 1.1 - January 21, 2025
-- Added Xray feature to detect ores.
-- Improved mod performance.
-- Fixed minor texture display bugs.
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        toggleXray = new KeyBinding("Toggle Xray", Keyboard.KEY_X, "Xray Mod");
+        Minecraft.getMinecraft().gameSettings.keyBindings = ArrayUtils.add(Minecraft.getMinecraft().gameSettings.keyBindings, toggleXray);
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
-### Version 1.0 - December 15, 2024
-- Initial release of Miner's Insight mod.
-- Added cave detection feature.
-- Optimized compatibility with Minecraft 1.16.5.
+    @SubscribeEvent
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
+        if (toggleXray.isPressed()) {
+            xrayEnabled = !xrayEnabled;
+            updateBlockLayers(xrayEnabled);
+        }
+    }
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+    private void updateBlockLayers(boolean enableXray) {
+        for (BlockRenderLayer layer : BlockRenderLayer.values()) {
+            if (enableXray) {
+                if (layer != BlockRenderLayer.TRANSLUCENT) {
+                    Minecraft.getMinecraft().renderGlobal.setBlockLayerRenderers(layer, false);
+                }
+            } else {
+                Minecraft.getMinecraft().renderGlobal.setBlockLayerRenderers(layer, true);
+            }
+        }
+    }
+}
 
